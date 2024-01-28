@@ -194,7 +194,7 @@ class Physionet2012DataReader(Sequence):
 class Physionet2012(MedicalTsDatasetBuilder):
     """Dataset of the PhysioNet/Computing in Cardiology Challenge 2012."""
 
-    VERSION = tfds.core.Version('1.0.10')
+    VERSION = None
     has_demographics = True
     has_vitals = True
     has_lab_measurements = False
@@ -202,8 +202,9 @@ class Physionet2012(MedicalTsDatasetBuilder):
     default_target = 'In-hospital_death'
 
     def __init__(self, **kwargs):
+        self.split = kwargs.get('split', 1)
+        Physionet2012.VERSION = tfds.core.Version('1.0.{}'.format(kwargs.get('split', 1)))
         super().__init__()
-        self.total_splits = kwargs.get('total_splits', 1)
 
 
     def _info(self):
@@ -245,38 +246,29 @@ class Physionet2012(MedicalTsDatasetBuilder):
         b_path = os.path.join(paths['set-b'], 'set-b')
         c_path = os.path.join(paths['set-c'], 'set-c')
 
-        split_list = []
-
-        for i in range(self.total_splits):
-            split_list.append(
-                tfds.core.SplitGenerator(
-                    name="train_{}".format(i+1),
-                    gen_kwargs={
-                        'data_dirs': [a_path, b_path, c_path],
-                        'outcome_file': os.path.join(RESOURCES, 'train_listfile_{}.csv'.format(i+1))
-                    },
-                )
-            )
-            split_list.append(
-                tfds.core.SplitGenerator(
-                    name="validation_{}".format(i+1),
-                    gen_kwargs={
-                        'data_dirs': [a_path, b_path, c_path],
-                        'outcome_file': os.path.join(RESOURCES, 'val_listfile_{}.csv'.format(i+1))
-                    },
-                )
-            )
-            split_list.append(
-                tfds.core.SplitGenerator(
-                    name="test_{}".format(i+1),
-                    gen_kwargs={
-                        'data_dirs': [a_path, b_path, c_path],
-                        'outcome_file': os.path.join(RESOURCES, 'test_listfile_{}.csv'.format(i+1))
-                    }
-                )
-            )
-
-        return split_list
+        return [
+            tfds.core.SplitGenerator(
+                name="train",
+                gen_kwargs={
+                    'data_dirs': [a_path, b_path, c_path],
+                    'outcome_file': os.path.join(RESOURCES, 'train_listfile_{}.csv'.format(self.split))
+                },
+            ),
+            tfds.core.SplitGenerator(
+                name="validation",
+                gen_kwargs={
+                    'data_dirs': [a_path, b_path, c_path],
+                    'outcome_file': os.path.join(RESOURCES, 'val_listfile_{}.csv'.format(self.split))
+                },
+            ),
+            tfds.core.SplitGenerator(
+                name="test",
+                gen_kwargs={
+                    'data_dirs': [a_path, b_path, c_path],
+                    'outcome_file': os.path.join(RESOURCES, 'test_listfile_{}.csv'.format(self.split))
+                },
+            ),
+        ]
 
 
     def _generate_examples(self, data_dirs, outcome_file):
