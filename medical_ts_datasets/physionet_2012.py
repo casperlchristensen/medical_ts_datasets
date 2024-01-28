@@ -201,6 +201,11 @@ class Physionet2012(MedicalTsDatasetBuilder):
     has_interventions = False
     default_target = 'In-hospital_death'
 
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.split_id = kwargs.get('split_id', 1)
+
+
     def _info(self):
         return MedicalTsDatasetInfo(
             builder=self,
@@ -245,21 +250,21 @@ class Physionet2012(MedicalTsDatasetBuilder):
                 name=tfds.Split.TRAIN,
                 gen_kwargs={
                     'data_dirs': [a_path, b_path, c_path],
-                    'outcome_file': os.path.join(RESOURCES, 'train_listfile.csv')
+                    'outcome_file': os.path.join(RESOURCES, 'train_listfile_{}.csv'.format(self.split_id))
                 },
             ),
             tfds.core.SplitGenerator(
                 name=tfds.Split.VALIDATION,
                 gen_kwargs={
                     'data_dirs': [a_path, b_path, c_path],
-                    'outcome_file': os.path.join(RESOURCES, 'val_listfile.csv')
+                    'outcome_file': os.path.join(RESOURCES, 'val_listfile_{}.csv'.format(self.split_id))
                 },
             ),
             tfds.core.SplitGenerator(
                 name=tfds.Split.TEST,
                 gen_kwargs={
                     'data_dirs': [a_path, b_path, c_path],
-                    'outcome_file': os.path.join(RESOURCES, 'test_listfile.csv')
+                    'outcome_file': os.path.join(RESOURCES, 'test_listfile_{}.csv'.format(self.split_id))
                 }
             )
         ]
